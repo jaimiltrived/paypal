@@ -238,6 +238,15 @@ The test suite covers:
 | `POST` | `/api/v1/judge/transaction` | Transaction risk, fraud, and anomaly assessment | `admin`, `operator`, `auditor` |
 | `POST` | `/api/v1/judge/action` | Dual-authorization safety assessment for pending actions | `admin`, `operator` |
 
+---
+
+## 5. PayOps AI Frontend Console
+
+The PayOps AI React frontend is located in [`frontend/`](./frontend/). It provides an enterprise dashboard interface matching [`design.md`](./frontend/design.md).
+
+For installation, development server, and build instructions, see [`frontend/README.md`](./frontend/README.md).
+
+
 
 
 

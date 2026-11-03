@@ -1,0 +1,177 @@
+/* Uses your existing tokens: --color-primary, --color-primary-100,
+   --color-surface, --color-text-*, --color-border, --radius-lg, --shadow-card */
+
+.copilot {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  padding: 22px 24px;
+  border: 1px solid var(--color-primary-100);
+  border-radius: var(--radius-lg);
+  /* A faint tint lifts this panel out of the row of white cards */
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-surface));
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* The one page-load moment: a hairline draws across the top once */
+.copilot::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-primary), transparent 85%);
+  transform-origin: left;
+  animation: copilot-sweep 1000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes copilot-sweep {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.copilot-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.copilot-meta { min-width: 0; }
+
+.copilot-kicker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.copilot-title {
+  margin-top: 4px;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
+/* Confidence ring */
+.copilot-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.copilot-ring-track {
+  fill: none;
+  stroke: var(--color-primary-100);
+  stroke-width: 3.5;
+}
+.copilot-ring-value {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1100ms cubic-bezier(0.22, 1, 0.36, 1) 150ms;
+}
+.copilot-ring-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* Body: indent so text aligns with the title, not the ring */
+.copilot-body { padding-left: 60px; display: grid; gap: 12px; }
+.copilot-summary {
+  max-width: 72ch;
+  min-height: 3em; /* reserve space so the layout doesn't jump while streaming */
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+.copilot-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--color-primary);
+  animation: copilot-blink 900ms steps(1) infinite;
+}
+@keyframes copilot-blink { 50% { opacity: 0; } }
+
+.copilot-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Evidence appears once the explanation finishes */
+.copilot-evidence {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 72ch;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 400ms ease, transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.copilot-evidence.is-visible { opacity: 1; transform: none; }
+.copilot-evidence li {
+  padding: 7px 0 7px 14px;
+  border-left: 2px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+.copilot-evidence li + li { margin-top: 2px; }
+
+.copilot-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding-top: 16px;
+  margin-left: 60px;
+  border-top: 1px solid var(--color-border);
+}
+.copilot-action-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 60ch;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+.copilot-action-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.copilot-approved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--color-success);
+}
+.copilot-buttons { display: flex; align-items: center; gap: 8px; }
+
+@media (max-width: 720px) {
+  .copilot-body, .copilot-foot { padding-left: 0; margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copilot::before { animation: none; }
+  .copilot-ring-value { transition: none; }
+  .copilot-evidence { transition: none; opacity: 1; transform: none; }
+  .copilot-caret { animation: none; }
+}
+
