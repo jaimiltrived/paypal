@@ -107,9 +107,30 @@ PAYPAL_WEBHOOK_ID=your_paypal_sandbox_webhook_id
 
 # Threshold for dual approval on refunds ($100.00 = 10000 cents)
 SENSITIVE_REFUND_THRESHOLD_CENTS=10000
+
+# Local AI Configuration (Ollama)
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+LLAMA_MODEL=llama3.2:1b
+QWEN_VL_MODEL=qwen2.5-vl:3b
+```
+
+### 3. Local AI Models Setup & Download (Ollama)
+
+PayOps AI uses local Ollama models with a 6 GB VRAM safety guard. Run the following commands to pull the required models:
+
+```powershell
+# 1. Start Ollama service (if not running in background)
+ollama serve
+
+# 2. Download Llama 3.2 1B for conversational reasoning and backend tool execution
+ollama pull llama3.2:1b
+
+# 3. Download Qwen2.5-VL 3B for bill, receipt, and invoice vision extraction
+ollama pull qwen2.5-vl:3b
 ```
 
 ---
+
 
 ## 5. Running the Application
 
