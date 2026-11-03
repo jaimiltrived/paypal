@@ -4,8 +4,8 @@ __pycache__/
 *$py.class
 .venv/
 venv/
+# SQLite databases (payops.db is tracked for quick setup)
 *.sqlite3
-payops.db
 
 # Testing & Caches
 .pytest_cache/

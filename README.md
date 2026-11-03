@@ -53,9 +53,16 @@ The database defines 10 core entities:
 5. **`events`**: Webhook event log for auditability and idempotency.
 6. **`audit_logs`**: Immutable record of all security and financial mutations with user ID, before/after JSON diffs, and IP addresses.
 7. **`pending_actions`**: Workflow queues for high-risk operations requiring administrative authorization.
-8. **`invoices`**: Billing documents and payment terms (scaffolded).
-9. **`disputes`**: Dispute tracking and chargeback resolution (scaffolded).
-10. **`skus`**: Product catalogue and inventory definitions (scaffolded).
+8. **`invoices`**: Billing documents and payment terms.
+9. **`disputes`**: Dispute tracking and chargeback resolution.
+10. **`skus`**: Product catalogue and inventory definitions.
+
+### SQL Schema & Database Dumps
+- **`schema.sql`**: Complete DDL statement definitions (tables, foreign keys, indexes).
+- **`payops_dump.sql`**: Full SQLite database dump including schema and initial seed data (roles, SKUs, admin user).
+- **`payops.db`**: Pre-seeded SQLite database ready for immediate development.
+- **`scripts/export_sql.py`**: Automated utility script to re-generate SQL schema and dumps anytime models change.
+
 
 ---
 

@@ -12,3 +12,4 @@ echo ReDoc:              http://127.0.0.1:8000/redoc
 echo Health Check:       http://127.0.0.1:8000/api/v1/health
 echo.
 .venv\Scripts\uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
