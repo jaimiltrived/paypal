@@ -1,15 +1,18 @@
 @echo off
 echo ========================================================
-echo Starting PayOps AI Backend Server
+echo Starting PayOps AI Backend Server (FastAPI)
 echo ========================================================
-if not exist .venv\Scripts\uvicorn.exe (
-    echo Virtual environment not found. Running setup.bat first...
-    call setup.bat
-)
+
+:: Seed database demo data if not already present
+python -m scripts.seed_demo_data
 
 echo API Documentation: http://127.0.0.1:8000/docs
 echo ReDoc:              http://127.0.0.1:8000/redoc
 echo Health Check:       http://127.0.0.1:8000/api/v1/health
 echo.
-.venv\Scripts\uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
+if exist .venv\Scripts\uvicorn.exe (
+    .venv\Scripts\uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+) else (
+    python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+)

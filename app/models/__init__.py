@@ -8,6 +8,7 @@ from app.models.pending_action import PendingAction
 from app.models.invoice import Invoice
 from app.models.dispute import Dispute
 from app.models.sku import SKU
+from app.models.payout import Payout
 
 __all__ = [
     "Base",
@@ -24,5 +25,5 @@ __all__ = [
     "Invoice",
     "Dispute",
     "SKU",
+    "Payout",
 ]
-

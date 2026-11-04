@@ -36,6 +36,33 @@ class OllamaClient:
             "available_models": [],
         }
 
+    async def _resolve_vision_model(self) -> str:
+        """Resolve installed vision model in Ollama (handles qwen2.5vl, qwen2.5-vl, llava, etc.)."""
+        health = await self.check_health()
+        installed = health.get("available_models", [])
+
+        # 1. Exact or partial match with configured model
+        for m in installed:
+            if self.vision_model in m or m in self.vision_model:
+                return m
+
+        # 2. Check for alternate naming: qwen2.5vl or qwen2.5-vl
+        alt_names = ["qwen2.5vl:3b", "qwen2.5-vl:3b", "qwen2.5vl:7b", "qwen2.5-vl:7b", "qwen2.5vl", "qwen2.5-vl"]
+        for alt in alt_names:
+            for m in installed:
+                if alt in m:
+                    return m
+
+        # 3. Any vision model installed in Ollama (llava, llama3.2-vision, minicpm-v)
+        for m in installed:
+            m_lower = m.lower()
+            if any(v in m_lower for v in ("vl", "vision", "llava", "minicpm", "moondream")):
+                logger.info(f"Auto-selected installed vision model: '{m}'")
+                return m
+
+        # Default to configured model
+        return self.vision_model
+
     async def _ensure_exclusive_model_loaded(self, target_model: str) -> None:
         """Ensure only one model occupies GPU VRAM at a time (crucial for 6 GB GPUs)."""
         if self._active_loaded_model and self._active_loaded_model != target_model:
@@ -63,7 +90,10 @@ class OllamaClient:
         temperature: float = 0.1,
     ) -> str:
         """Generate response from Ollama model with GPU mutex protection."""
-        selected_model = model or (self.vision_model if images else self.text_model)
+        if images and not model:
+            selected_model = await self._resolve_vision_model()
+        else:
+            selected_model = model or (self.vision_model if images else self.text_model)
 
         async with self._gpu_lock:
             await self._ensure_exclusive_model_loaded(selected_model)
@@ -114,4 +144,3 @@ def get_ollama_client() -> OllamaClient:
     if _ollama_client_instance is None:
         _ollama_client_instance = OllamaClient()
     return _ollama_client_instance
-

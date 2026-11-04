@@ -78,7 +78,8 @@ class DocumentExtractor:
         if not image_base64 and not document_text:
             raise PayOpsException("Must provide either image_base64 or document_text for extraction.")
 
-        images = [image_base64] if image_base64 else None
+        clean_b64 = image_base64.split(",")[-1] if (image_base64 and "," in image_base64) else image_base64
+        images = [clean_b64] if clean_b64 else None
         prompt = "Analyze this financial invoice or receipt document and extract all fields in JSON format."
         if document_text:
             prompt += f"\n\nDocument Text:\n{document_text}"

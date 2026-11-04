@@ -13,6 +13,7 @@ import {
   Cpu,
   Activity,
   Layers,
+  FileScan,
 } from 'lucide-react';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -20,6 +21,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
+import { DocumentScannerModal } from '../../components/ai/DocumentScannerModal';
 import { FIXTURE_AI_INSIGHTS } from '../../data/fixtures';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { useToast } from '../../context/ToastContext';
@@ -29,6 +31,7 @@ export function AIInsightsPage() {
   const toast = useToast();
 
   const [severityFilter, setSeverityFilter] = useState('ALL');
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const filteredInsights = FIXTURE_AI_INSIGHTS.filter((item) => {
     if (severityFilter !== 'ALL' && item.severity !== severityFilter) return false;
@@ -47,17 +50,26 @@ export function AIInsightsPage() {
           </Badge>
         }
         actions={
-          <div style={{ width: '160px' }}>
-            <Select
-              value={severityFilter}
-              onChange={(e) => setSeverityFilter(e.target.value)}
-              options={[
-                { value: 'ALL', label: 'All Severities' },
-                { value: 'high', label: 'High Priority' },
-                { value: 'medium', label: 'Medium Priority' },
-                { value: 'low', label: 'Low / Optimization' },
-              ]}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '160px' }}>
+              <Select
+                value={severityFilter}
+                onChange={(e) => setSeverityFilter(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'All Severities' },
+                  { value: 'high', label: 'High Priority' },
+                  { value: 'medium', label: 'Medium Priority' },
+                  { value: 'low', label: 'Low / Optimization' },
+                ]}
+              />
+            </div>
+            <Button
+              variant="primary"
+              icon={FileScan}
+              onClick={() => setIsScannerOpen(true)}
+            >
+              Scan Receipt / Bill
+            </Button>
           </div>
         }
       />
@@ -236,6 +248,11 @@ export function AIInsightsPage() {
           );
         })}
       </div>
+
+      <DocumentScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+      />
     </PageContainer>
   );
 }

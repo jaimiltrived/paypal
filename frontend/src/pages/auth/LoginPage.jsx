@@ -4,19 +4,21 @@ import { Eye, EyeOff, ShieldCheck, Lock, Mail, ArrowRight, AlertCircle, Check } 
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { login } = useAuth();
 
-  const [email, setEmail] = useState('alex.vance@payops.ai');
-  const [password, setPassword] = useState('PayOpsAdmin#2026');
+  const [email, setEmail] = useState('admin@payops.ai');
+  const [password, setPassword] = useState('AdminPassword123!');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -31,17 +33,26 @@ export function LoginPage() {
 
     setLoading(true);
 
-    // Visual authentication simulation
-    setTimeout(() => {
-      setLoading(false);
-      toast.success('Welcome back, Alex', 'Signed in as Platform Administrator.');
+    try {
+      const result = await login(email, password);
+      if (result.isLive) {
+        toast.success(`Welcome back, ${result.user?.full_name || 'Operator'}`, `Connected to FastAPI backend (${result.user?.role?.name || result.user?.role || 'Admin'})`);
+      } else {
+        toast.info(`Welcome back, ${result.user?.full_name || 'Operator'}`, 'Session authenticated in local mode.');
+      }
       navigate('/dashboard');
-    }, 600);
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.message || 'Invalid credentials or authentication error.');
+      toast.error('Authentication Failed', err.message || 'Please check your email and password.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleQuickFill = (testEmail, testRole) => {
+  const handleQuickFill = (testEmail, testRole, testPassword) => {
     setEmail(testEmail);
-    setPassword('PayOpsAdmin#2026');
+    setPassword(testPassword);
     setError('');
     toast.info('Credentials loaded', `Selected test user (${testRole})`);
   };
@@ -244,7 +255,7 @@ export function LoginPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <button
                 type="button"
-                onClick={() => handleQuickFill('alex.vance@payops.ai', 'Admin')}
+                onClick={() => handleQuickFill('admin@payops.ai', 'Admin', 'AdminPassword123!')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -266,7 +277,7 @@ export function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => handleQuickFill('sarah.jenkins@payops.ai', 'Operator')}
+                onClick={() => handleQuickFill('operator@payops.ai', 'Operator', 'OperatorPassword123!')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -282,6 +293,28 @@ export function LoginPage() {
               >
                 <span>
                   <strong>Sarah Jenkins</strong> (Operator)
+                </span>
+                <span style={{ color: 'var(--color-primary)', fontSize: '11px' }}>Load →</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickFill('auditor@payops.ai', 'Auditor', 'AuditorPassword123!')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '6px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: 'var(--color-surface-subtle)',
+                  border: '1px solid var(--color-border)',
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--color-text-primary)',
+                  textAlign: 'left',
+                }}
+              >
+                <span>
+                  <strong>Marcus Brody</strong> (Auditor)
                 </span>
                 <span style={{ color: 'var(--color-primary)', fontSize: '11px' }}>Load →</span>
               </button>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp,
@@ -33,6 +33,8 @@ import { Table } from '../../components/ui/Table';
 import { Select } from '../../components/ui/Select';
 import { AiCopilotPanel } from '../../components/ai/AiCopilotPanel';
 import { SettlementDonut } from '../../components/dashboard/SettlementDonut';
+import { ordersService } from '../../services/ordersService';
+import { exportDashboardSummaryToCSV } from '../../utils/exportUtils';
 import {
   FIXTURE_KPI_METRICS,
   FIXTURE_CHART_VOLUME,
@@ -47,17 +49,42 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [dateRange, setDateRange] = useState('7d');
+  const [metrics, setMetrics] = useState(FIXTURE_KPI_METRICS);
+  const [recentOrders, setRecentOrders] = useState(FIXTURE_ORDERS.slice(0, 5));
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      try {
+        const [mRes, oRes] = await Promise.all([
+          ordersService.getMetrics(),
+          ordersService.getOrders({ limit: 5 }),
+        ]);
+        if (isMounted) {
+          if (mRes?.data) setMetrics(mRes.data);
+          if (oRes?.data) setRecentOrders(oRes.data.slice(0, 5));
+        }
+      } catch (err) {
+        console.warn('Dashboard live data fetch error:', err);
+      }
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Top AI Insight for quick action
   const priorityInsight = FIXTURE_AI_INSIGHTS[0];
   const latest = FIXTURE_CHART_VOLUME.at(-1);
 
   const handleExport = () => {
+    exportDashboardSummaryToCSV(metrics, FIXTURE_CHART_VOLUME, FIXTURE_STATUS_DISTRIBUTION);
     toast.success('Report Export Initiated', 'Daily settlement ledger summary downloaded in CSV format.');
   };
 
-  const isSuccessRateBelowTarget = FIXTURE_KPI_METRICS.success_rate_pct < FIXTURE_KPI_METRICS.success_rate_target_pct;
-  const successRateDelta = (FIXTURE_KPI_METRICS.success_rate_pct - FIXTURE_KPI_METRICS.success_rate_target_pct).toFixed(2);
+  const isSuccessRateBelowTarget = metrics.success_rate_pct < metrics.success_rate_target_pct;
+  const successRateDelta = (metrics.success_rate_pct - metrics.success_rate_target_pct).toFixed(2);
 
   const columns = [
     {
@@ -197,13 +224,13 @@ export function DashboardPage() {
           </div>
           <div>
             <div className="kpi-value">
-              {formatCurrency(FIXTURE_KPI_METRICS.total_volume_cents, 'USD')}
+              {formatCurrency(metrics.total_volume_cents, 'USD')}
             </div>
           </div>
           <div className="kpi-footer">
             <span className="kpi-trend kpi-trend-positive">
               <TrendingUp size={11} />
-              +{FIXTURE_KPI_METRICS.total_volume_growth_pct}%
+              +{metrics.total_volume_growth_pct}%
             </span>
             <span>vs previous period</span>
           </div>
@@ -219,13 +246,13 @@ export function DashboardPage() {
           </div>
           <div>
             <div className="kpi-value">
-              {FIXTURE_KPI_METRICS.successful_transactions.toLocaleString()}
+              {metrics.successful_transactions.toLocaleString()}
             </div>
           </div>
           <div className="kpi-footer">
             <span className="kpi-trend kpi-trend-positive">
               <TrendingUp size={11} />
-              +{FIXTURE_KPI_METRICS.successful_transactions_growth_pct}%
+              +{metrics.successful_transactions_growth_pct}%
             </span>
             <span>settled captures</span>
           </div>
@@ -241,13 +268,13 @@ export function DashboardPage() {
           </div>
           <div>
             <div className="kpi-value">
-              {FIXTURE_KPI_METRICS.failed_transactions.toLocaleString()}
+              {metrics.failed_transactions.toLocaleString()}
             </div>
           </div>
           <div className="kpi-footer">
             <span className="kpi-trend kpi-trend-positive">
               <TrendingDown size={11} />
-              {FIXTURE_KPI_METRICS.failed_transactions_pct_change}%
+              {metrics.failed_transactions_pct_change}%
             </span>
             <span>declines reduced</span>
           </div>
@@ -263,19 +290,19 @@ export function DashboardPage() {
           </div>
           <div>
             <div className="kpi-value">
-              {FIXTURE_KPI_METRICS.success_rate_pct}%
+              {metrics.success_rate_pct}%
             </div>
           </div>
           <div className="kpi-footer">
             {isSuccessRateBelowTarget ? (
               <span className="kpi-trend kpi-trend-warning">
                 <AlertTriangle size={11} />
-                {successRateDelta}% vs Target {FIXTURE_KPI_METRICS.success_rate_target_pct}%
+                {successRateDelta}% vs Target {metrics.success_rate_target_pct}%
               </span>
             ) : (
               <span className="kpi-trend kpi-trend-positive">
                 <CheckCircle2 size={11} />
-                On Target ({FIXTURE_KPI_METRICS.success_rate_target_pct}%)
+                On Target ({metrics.success_rate_target_pct}%)
               </span>
             )}
             <span>Rolling 7-day average</span>
@@ -384,7 +411,7 @@ export function DashboardPage() {
         >
           <Table
             columns={columns}
-            data={FIXTURE_ORDERS.slice(0, 5)}
+            data={recentOrders}
             onRowClick={(row) => navigate(`/transactions/${row.id}`)}
           />
         </Card>

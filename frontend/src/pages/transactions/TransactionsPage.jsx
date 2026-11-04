@@ -21,6 +21,7 @@ import { Table } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
 import { ordersService } from '../../services/ordersService';
 import { formatCurrency, formatDate, truncateId } from '../../utils/formatters';
+import { exportTransactionsToCSV } from '../../utils/exportUtils';
 import { useToast } from '../../context/ToastContext';
 
 export function TransactionsPage() {
@@ -60,7 +61,12 @@ export function TransactionsPage() {
   }, [searchTerm, statusFilter, methodFilter]);
 
   const handleExportCSV = () => {
-    toast.success('Export Ready', `Exported ${orders.length} transaction records to CSV.`);
+    if (!orders || orders.length === 0) {
+      toast.warning('No Records', 'There are no transaction records to export.');
+      return;
+    }
+    exportTransactionsToCSV(orders);
+    toast.success('Export Successful', `Exported ${orders.length} transaction records to CSV.`);
   };
 
   const handleClearFilters = () => {

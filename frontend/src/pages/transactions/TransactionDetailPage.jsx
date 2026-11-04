@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Building,
   Hash,
+  Download,
 } from 'lucide-react';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -27,6 +28,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { ordersService } from '../../services/ordersService';
 import { formatCurrency, formatDate, truncateId } from '../../utils/formatters';
+import { exportTransactionsToCSV } from '../../utils/exportUtils';
 import { useToast } from '../../context/ToastContext';
 
 export function TransactionDetailPage() {
@@ -66,24 +68,43 @@ export function TransactionDetailPage() {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const handleIssueRefund = () => {
+  const handleIssueRefund = async () => {
     setRefundSubmitting(true);
-    setTimeout(() => {
-      setRefundSubmitting(false);
+    try {
+      const res = await ordersService.createRefund({
+        order_id: order.id,
+        amount_cents: order.amount_cents,
+        reason: refundReason,
+      });
+
       setIsRefundModalOpen(false);
 
-      if (order.amount_cents > 10000) {
+      const refundResult = res?.data || res;
+      if (refundResult?.status === 'PENDING_CONFIRMATION' || refundResult?.pending_action_id) {
         toast.warning(
           'Queued for Dual Confirmation',
-          `Refund of ${formatCurrency(order.amount_cents, order.currency)} exceeds safety threshold ($100.00). Awaiting administrator sign-off.`
+          refundResult.message || `Refund exceeds safety threshold. Awaiting secondary administrator sign-off.`
         );
       } else {
         toast.success(
           'Refund Processed',
-          `Successfully processed refund of ${formatCurrency(order.amount_cents, order.currency)}.`
+          refundResult?.message || `Successfully processed refund of ${formatCurrency(order.amount_cents, order.currency)}.`
         );
       }
-    }, 650);
+
+      // Refresh order data
+      try {
+        const refreshed = await ordersService.getOrderById(order.id);
+        if (refreshed?.data) setOrder(refreshed.data);
+      } catch {
+        // preserve current order view
+      }
+    } catch (err) {
+      console.error('Refund creation error:', err);
+      toast.error('Refund Failed', err.message || 'Unable to process refund on backend.');
+    } finally {
+      setRefundSubmitting(false);
+    }
   };
 
   if (loading || !order) {
@@ -99,6 +120,11 @@ export function TransactionDetailPage() {
 
   const isHighValue = order.amount_cents > 10000;
 
+  const handleExportSlip = () => {
+    exportTransactionsToCSV([order], `payops-receipt-${truncateId(order.id, 8, 4)}.csv`);
+    toast.success('Audit Slip Exported', `Transaction ${truncateId(order.id, 8, 4)} exported to CSV receipt.`);
+  };
+
   return (
     <PageContainer>
       <PageHeader
@@ -110,14 +136,24 @@ export function TransactionDetailPage() {
           { label: truncateId(order.id, 8, 4) },
         ]}
         actions={
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={ArrowLeft}
-            onClick={() => navigate('/transactions')}
-          >
-            Back to Transactions
-          </Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={Download}
+              onClick={handleExportSlip}
+            >
+              Export Slip
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={ArrowLeft}
+              onClick={() => navigate('/transactions')}
+            >
+              Back to Transactions
+            </Button>
+          </div>
         }
       />
 

@@ -16,20 +16,31 @@ import { Dropdown } from '../ui/Dropdown';
 import { Badge } from '../ui/Badge';
 import { FIXTURE_USER } from '../../data/fixtures';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 
 export function Topbar({ onOpenMobile }) {
   const navigate = useNavigate();
   const toast = useToast();
+  const { user, logout, isBackendLive } = useAuth();
   const [unreadCount] = useState(2);
 
+  const currentUser = user || FIXTURE_USER;
+  const userInitials = (currentUser.full_name || currentUser.email || 'AV')
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+
   const handleSignOut = () => {
+    logout();
     toast.info('Session Terminated', 'Signed out from PayOps AI console.');
     navigate('/login');
   };
 
   const userMenuItems = [
     {
-      label: 'Signed in as alex.vance@payops.ai',
+      label: `Signed in as ${currentUser.email}`,
       disabled: true,
     },
     { divider: true },
@@ -141,11 +152,11 @@ export function Topbar({ onOpenMobile }) {
             gap: '6px',
             padding: '3px 9px',
             borderRadius: 'var(--radius-pill)',
-            backgroundColor: 'var(--color-surface-subtle)',
-            border: '1px solid var(--color-border)',
+            backgroundColor: isBackendLive ? 'var(--color-success-bg)' : 'var(--color-surface-subtle)',
+            border: `1px solid ${isBackendLive ? 'var(--color-success-border)' : 'var(--color-border)'}`,
             fontSize: '11px',
             fontWeight: 550,
-            color: 'var(--color-text-secondary)',
+            color: isBackendLive ? 'var(--color-success-text)' : 'var(--color-text-secondary)',
           }}
           className="desktop-only"
         >
@@ -154,10 +165,10 @@ export function Topbar({ onOpenMobile }) {
               width: '6px',
               height: '6px',
               borderRadius: '50%',
-              backgroundColor: 'var(--color-primary)',
+              backgroundColor: isBackendLive ? 'var(--color-success)' : 'var(--color-text-muted)',
             }}
           />
-          <span>Dev Fixture Mode</span>
+          <span>{isBackendLive ? 'FastAPI Backend Live' : 'Dev Fixtures'}</span>
         </div>
 
         {/* PayPal Sandbox Status */}
@@ -233,7 +244,7 @@ export function Topbar({ onOpenMobile }) {
                   fontWeight: 700,
                 }}
               >
-                AV
+                {userInitials}
               </div>
               <span
                 style={{
@@ -243,7 +254,7 @@ export function Topbar({ onOpenMobile }) {
                 }}
                 className="desktop-only"
               >
-                {FIXTURE_USER.full_name}
+                {currentUser.full_name || currentUser.email}
               </span>
             </button>
           }

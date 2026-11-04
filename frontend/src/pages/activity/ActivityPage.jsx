@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Clock,
   ShieldCheck,
@@ -25,8 +25,10 @@ import { SearchInput } from '../../components/ui/SearchInput';
 import { Badge } from '../../components/ui/Badge';
 import { Table } from '../../components/ui/Table';
 import { Modal } from '../../components/ui/Modal';
+import { activityService } from '../../services/activityService';
 import { FIXTURE_AUDIT_LOGS } from '../../data/fixtures';
 import { formatUtcTimestamp } from '../../utils/formatters';
+import { exportAuditLogsToCSV, exportToJSONL } from '../../utils/exportUtils';
 import { useToast } from '../../context/ToastContext';
 
 export function ActivityPage() {
@@ -34,16 +36,36 @@ export function ActivityPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [selectedLog, setSelectedLog] = useState(null);
+  const [logs, setLogs] = useState(FIXTURE_AUDIT_LOGS);
 
-  const filteredLogs = FIXTURE_AUDIT_LOGS.filter((log) => {
+  useEffect(() => {
+    let isMounted = true;
+    async function loadLogs() {
+      try {
+        const res = await activityService.getAuditLogs();
+        if (isMounted && res?.data) {
+          setLogs(res.data);
+        }
+      } catch (e) {
+        console.warn('Audit logs fetch error:', e);
+      }
+    }
+    loadLogs();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const logList = Array.isArray(logs) ? logs : [];
+  const filteredLogs = logList.filter((log) => {
     if (categoryFilter !== 'ALL' && log.category !== categoryFilter) return false;
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       return (
-        log.user.toLowerCase().includes(q) ||
-        log.action.toLowerCase().includes(q) ||
-        log.entity_id.toLowerCase().includes(q) ||
-        log.details.toLowerCase().includes(q)
+        (log.user && log.user.toLowerCase().includes(q)) ||
+        (log.action && log.action.toLowerCase().includes(q)) ||
+        (log.entity_id && log.entity_id.toLowerCase().includes(q)) ||
+        (log.details && log.details.toLowerCase().includes(q))
       );
     }
     return true;
@@ -174,6 +196,25 @@ export function ActivityPage() {
     },
   ];
 
+  const handleExportCSV = () => {
+    if (!logs || logs.length === 0) {
+      toast.warning('No Records', 'There are no audit records to export.');
+      return;
+    }
+    exportAuditLogsToCSV(logs);
+    toast.success('Forensic Log Export', `Exported ${logs.length} cryptographic audit log records to CSV.`);
+  };
+
+  const handleExportJSONL = () => {
+    if (!logs || logs.length === 0) {
+      toast.warning('No Records', 'There are no audit records to export.');
+      return;
+    }
+    const dateStr = new Date().toISOString().split('T')[0];
+    exportToJSONL(logs, `payops-audit-stream-${dateStr}.jsonl`);
+    toast.success('Forensic Log Export', `Exported ${logs.length} records in cryptographic JSONL stream format.`);
+  };
+
   return (
     <PageContainer>
       <PageHeader
@@ -184,7 +225,14 @@ export function ActivityPage() {
             <Button
               variant="secondary"
               icon={Download}
-              onClick={() => toast.success('Forensic Log Export', 'Exported cryptographic JSONL audit stream.')}
+              onClick={handleExportCSV}
+            >
+              Export CSV
+            </Button>
+            <Button
+              variant="secondary"
+              icon={Download}
+              onClick={handleExportJSONL}
             >
               Export JSONL
             </Button>

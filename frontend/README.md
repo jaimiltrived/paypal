@@ -149,12 +149,26 @@ frontend/
 
 ---
 
-## 5. Development Fixture Isolation vs Backend Integration
+## 5. Backend Integration & Hybrid Fallback Architecture
 
-Per the project instructions, **this milestone does not call or modify backend endpoints**:
-1. All demonstration data lives strictly in `src/data/fixtures.js` and mirrors the real database schema (`schema.sql` and SQLAlchemy models).
-2. The service layer (`src/services/`) encapsulates data access, returning mock promises with slight realistic latency simulation.
-3. `src/services/apiClient.js` provides a pre-configured Axios instance with authorization header interceptors ready for the subsequent backend integration milestone.
+The frontend is fully integrated with the Python FastAPI backend:
+1. **API Client & Reverse Proxy**:
+   - `src/services/apiClient.js` connects to `/api/v1`, proxied via Vite development server to `http://127.0.0.1:8000`.
+   - Automatic JWT Bearer token injection on authenticated requests (`Authorization: Bearer <token>`).
+2. **Authentication Context (`AuthContext.jsx`)**:
+   - Manages live user authentication against `POST /api/v1/auth/login` and session validation against `GET /api/v1/auth/me`.
+   - Seeded test accounts ready for instant login:
+     - **Admin**: `admin@payops.ai` / `AdminPassword123!`
+     - **Operator**: `operator@payops.ai` / `OperatorPassword123!`
+     - **Auditor**: `auditor@payops.ai` / `AuditorPassword123!`
+3. **Resilient Hybrid Fallback**:
+   - All services (`ordersService`, `riskService`, `activityService`, `reportsService`, `aiService`) attempt live FastAPI endpoints first.
+   - If the backend is temporarily offline, they seamlessly fall back to local fixtures (`src/data/fixtures.js`), ensuring zero downtime during frontend design reviews.
+4. **Live Actions**:
+   - **Dual-Confirmation Approvals**: Calls `POST /api/v1/actions/pending/{id}/confirm` and `/reject`.
+   - **Dispute Inflow**: Fetches live disputes from `GET /api/v1/disputes`.
+   - **Immutable Audit Trail**: Streams live database events from `GET /api/v1/ledger/audit-logs`.
+   - **Gateway Health Ping**: Interactive ping tests live latency against `GET /api/v1/health`.
 
 ---
 

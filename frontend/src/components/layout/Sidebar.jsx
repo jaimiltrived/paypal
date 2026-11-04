@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { FIXTURE_USER } from '../../data/fixtures';
+import { useAuth } from '../../context/AuthContext';
 
 const NAV_GROUPS = [
   {
@@ -51,6 +52,15 @@ export function Sidebar({
   onCloseMobile,
 }) {
   const location = useLocation();
+  const { user } = useAuth();
+  const currentUser = user || FIXTURE_USER;
+  const userInitials = (currentUser.full_name || currentUser.email || 'AV')
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+  const roleName = currentUser.role?.name || currentUser.role || 'Admin';
 
   return (
     <>
@@ -320,7 +330,7 @@ export function Sidebar({
                   flexShrink: 0,
                 }}
               >
-                AV
+                {userInitials}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -334,7 +344,7 @@ export function Sidebar({
                       textOverflow: 'ellipsis',
                     }}
                   >
-                    {FIXTURE_USER.full_name}
+                    {currentUser.full_name || currentUser.email}
                   </span>
                   <span
                     style={{
@@ -347,7 +357,7 @@ export function Sidebar({
                       textTransform: 'uppercase',
                     }}
                   >
-                    Admin
+                    {roleName}
                   </span>
                 </div>
                 <span
@@ -359,7 +369,7 @@ export function Sidebar({
                     textOverflow: 'ellipsis',
                   }}
                 >
-                  {FIXTURE_USER.email}
+                  {currentUser.email}
                 </span>
               </div>
             </div>
@@ -377,9 +387,9 @@ export function Sidebar({
                 fontSize: '11px',
                 fontWeight: 700,
               }}
-              title={`${FIXTURE_USER.full_name} (Admin)`}
+              title={`${currentUser.full_name || currentUser.email} (${roleName})`}
             >
-              AV
+              {userInitials}
             </div>
           )}
 

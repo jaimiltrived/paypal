@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ShieldAlert,
@@ -25,6 +25,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { Modal } from '../../components/ui/Modal';
+import { riskService } from '../../services/riskService';
 import { FIXTURE_RISK_ALERTS, FIXTURE_PENDING_ACTIONS } from '../../data/fixtures';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { useToast } from '../../context/ToastContext';
@@ -36,6 +37,7 @@ export function RiskPage() {
   const [severityFilter, setSeverityFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [typeFilter, setTypeFilter] = useState('ALL');
+  const [alerts, setAlerts] = useState(FIXTURE_RISK_ALERTS);
   const [pendingActions, setPendingActions] = useState(FIXTURE_PENDING_ACTIONS);
   const [selectedAction, setSelectedAction] = useState(null);
   const [actionType, setActionType] = useState(''); // 'approve' | 'reject'
@@ -43,7 +45,29 @@ export function RiskPage() {
   const [complianceChecked, setComplianceChecked] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
-  const filteredAlerts = FIXTURE_RISK_ALERTS.filter((a) => {
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRiskData() {
+      try {
+        const [alertsRes, actionsRes] = await Promise.all([
+          riskService.getAlerts(),
+          riskService.getPendingActions(),
+        ]);
+        if (isMounted) {
+          if (alertsRes?.data) setAlerts(alertsRes.data);
+          if (actionsRes?.data) setPendingActions(actionsRes.data);
+        }
+      } catch (e) {
+        console.warn('Risk data fetch error:', e);
+      }
+    }
+    loadRiskData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredAlerts = alerts.filter((a) => {
     if (severityFilter !== 'ALL' && a.severity !== severityFilter) return false;
     if (statusFilter !== 'ALL' && a.status !== statusFilter) return false;
     if (typeFilter !== 'ALL' && a.entity_type !== typeFilter) return false;
@@ -57,16 +81,16 @@ export function RiskPage() {
     setRejectReason('');
   };
 
-  const handleConfirmPendingAction = () => {
+  const handleConfirmPendingAction = async () => {
     setConfirming(true);
-    setTimeout(() => {
-      setConfirming(false);
-      const isApproval = actionType === 'approve';
-      setPendingActions((prev) => prev.filter((p) => p.id !== selectedAction.id));
-      const targetAction = selectedAction;
-      setSelectedAction(null);
+    const isApproval = actionType === 'approve';
+    const targetAction = selectedAction;
 
+    try {
       if (isApproval) {
+        await riskService.confirmPendingAction(targetAction.id);
+        setPendingActions((prev) => prev.filter((p) => p.id !== targetAction.id));
+        setSelectedAction(null);
         toast.success(
           'Dual Authorization Executed & Sealed',
           `Executed ${targetAction.action_type} for ${formatCurrency(
@@ -75,12 +99,19 @@ export function RiskPage() {
           )}. Audit ledger hash generated.`
         );
       } else {
+        await riskService.rejectPendingAction(targetAction.id, rejectReason);
+        setPendingActions((prev) => prev.filter((p) => p.id !== targetAction.id));
+        setSelectedAction(null);
         toast.warning(
           'Action Rejected',
           `Rejected pending action ${targetAction.id}. Ledger state preserved.`
         );
       }
-    }, 600);
+    } catch (err) {
+      toast.error('Execution Failed', err.message || 'Operation could not be completed.');
+    } finally {
+      setConfirming(false);
+    }
   };
 
   return (

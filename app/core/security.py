@@ -1,9 +1,23 @@
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any, Optional, Set
 import bcrypt
 import jwt
 
 from app.core.config import settings
+
+# In-memory blacklist of revoked JWT tokens
+_REVOKED_TOKENS: Set[str] = set()
+
+
+def revoke_token(token: str) -> None:
+    """Add a JWT token to the revocation blacklist."""
+    if token:
+        _REVOKED_TOKENS.add(token)
+
+
+def is_token_revoked(token: str) -> bool:
+    """Check if a JWT token has been explicitly revoked upon logout."""
+    return token in _REVOKED_TOKENS
 
 
 def hash_password(password: str) -> str:
@@ -56,4 +70,3 @@ def decode_access_token(token: str) -> dict[str, Any]:
         settings.SECRET_KEY,
         algorithms=[settings.ALGORITHM],
     )
-

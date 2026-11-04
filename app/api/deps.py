@@ -6,7 +6,7 @@ import jwt
 
 from app.core.database import get_db
 from app.core.exceptions import AuthenticationError, AuthorizationError
-from app.core.security import decode_access_token
+from app.core.security import decode_access_token, is_token_revoked
 from app.models.user import User
 from app.repositories.user_repo import UserRepository
 
@@ -30,6 +30,14 @@ def get_current_user(
             detail="Authentication token required.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    if is_token_revoked(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked. Please re-authenticate.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     try:
         payload = decode_access_token(token)
         user_id: Optional[str] = payload.get("sub")

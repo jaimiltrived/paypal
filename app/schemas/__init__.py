@@ -71,6 +71,11 @@ from app.schemas.judge import (
     JudgePendingActionEvaluationRequest,
     JudgePendingActionEvaluationResult,
 )
+from app.schemas.payout import (
+    PayoutCreate,
+    PayoutRead,
+    PayoutMetrics,
+)
 
 __all__ = [
     "BaseSchema",
@@ -122,9 +127,7 @@ __all__ = [
     "JudgeTransactionEvaluationResult",
     "JudgePendingActionEvaluationRequest",
     "JudgePendingActionEvaluationResult",
+    "PayoutCreate",
+    "PayoutRead",
+    "PayoutMetrics",
 ]
-
-
-
-
-

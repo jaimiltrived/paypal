@@ -4,6 +4,7 @@ from sqlalchemy import func
 
 from app.models.order import Order
 from app.models.refund import Refund
+from app.models.payout import Payout
 from app.schemas.ledger import LedgerSummaryResponse, LedgerTransaction
 
 
@@ -66,6 +67,12 @@ class LedgerService:
             .filter(Refund.status == "COMPLETED")
             .all()
         )
+        # Fetch completed payouts (Debits)
+        completed_payouts = (
+            self.db.query(Payout)
+            .filter(Payout.status == "SUCCESS")
+            .all()
+        )
 
         transactions: List[LedgerTransaction] = []
 
@@ -99,10 +106,24 @@ class LedgerService:
                 )
             )
 
+        for p_item in completed_payouts:
+            transactions.append(
+                LedgerTransaction(
+                    id=f"TX-PAY-{p_item.id}",
+                    transaction_type="DEBIT",
+                    order_id=p_item.payout_batch_id or p_item.id,
+                    external_reference=p_item.payout_item_id,
+                    amount_cents=p_item.amount_cents,
+                    currency=p_item.currency,
+                    status=p_item.status,
+                    description=f"Partner disbursement: {p_item.recipient_email} ({p_item.note or ''})",
+                    timestamp=p_item.created_at,
+                )
+            )
+
         # Sort all descending by timestamp
         transactions.sort(key=lambda x: x.timestamp, reverse=True)
         total = len(transactions)
         paged = transactions[skip : skip + limit]
 
         return paged, total
-

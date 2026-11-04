@@ -1,6 +1,6 @@
 import email_validator
 from typing import Literal
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Disable DNS deliverability checks so email validation is instantaneous and offline/sandbox friendly
@@ -18,6 +18,16 @@ class Settings(BaseSettings):
 
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def parse_debug(cls, v):
+        if isinstance(v, str):
+            if v.lower() in ("release", "prod", "production", "false", "0", "no"):
+                return False
+            if v.lower() in ("debug", "dev", "development", "true", "1", "yes"):
+                return True
+        return bool(v)
     PROJECT_NAME: str = "PayOps AI Backend"
     API_V1_PREFIX: str = "/api/v1"
 

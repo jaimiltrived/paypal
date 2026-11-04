@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Download, Filter, RefreshCw, Search, ExternalLink, Receipt, CheckCircle2, DollarSign, Euro, IndianRupee, ShieldCheck, ArrowRight, } from 'lucide-react';
+import { CreditCard, Download, Filter, RefreshCw, Search, ExternalLink, Receipt, CheckCircle2, DollarSign, Euro, IndianRupee, ShieldCheck, ArrowRight, FileScan } from 'lucide-react';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Card } from '../../components/ui/Card';
@@ -10,31 +10,58 @@ import { SearchInput } from '../../components/ui/SearchInput';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Table } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
+import { DocumentScannerModal } from '../../components/ai/DocumentScannerModal';
+import { ordersService } from '../../services/ordersService';
 import { FIXTURE_ORDERS, FIXTURE_KPI_METRICS } from '../../data/fixtures';
 import { formatCurrency, formatDate, truncateId } from '../../utils/formatters';
+import { exportPaymentsToCSV } from '../../utils/exportUtils';
 import { useToast } from '../../context/ToastContext';
 
 export function PaymentsPage() {
   const navigate = useNavigate();
   const toast = useToast();
 
+  const [orders, setOrders] = useState(FIXTURE_ORDERS);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currencyFilter, setCurrencyFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const pageSize = 5;
 
-  let filtered = FIXTURE_ORDERS.filter((o) => {
+  useEffect(() => {
+    let isMounted = true;
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await ordersService.getOrders();
+        if (isMounted && res?.data) {
+          setOrders(res.data);
+        }
+      } catch (e) {
+        console.warn('Failed to load orders for payments view', e);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  let filtered = orders.filter((o) => {
     if (currencyFilter !== 'ALL' && o.currency !== currencyFilter) return false;
     if (statusFilter !== 'ALL' && o.status !== statusFilter) return false;
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       return (
-        o.id.toLowerCase().includes(q) ||
-        o.paypal_order_id.toLowerCase().includes(q) ||
+        o.id?.toLowerCase().includes(q) ||
+        o.paypal_order_id?.toLowerCase().includes(q) ||
         (o.capture_id && o.capture_id.toLowerCase().includes(q)) ||
-        o.payer_email.toLowerCase().includes(q) ||
-        o.customer.name.toLowerCase().includes(q)
+        o.payer_email?.toLowerCase().includes(q) ||
+        o.customer?.name?.toLowerCase().includes(q)
       );
     }
     return true;
@@ -129,19 +156,50 @@ export function PaymentsPage() {
     },
   ];
 
+  const handleExport = () => {
+    if (!orders || orders.length === 0) {
+      toast.warning('No Records', 'There are no payment capture records to export.');
+      return;
+    }
+    const formattedPayments = orders.map(o => ({
+      id: o.capture_id || o.id,
+      order_reference: o.paypal_order_id || o.id,
+      paypal_capture_id: o.capture_id || 'PENDING_CAPTURE',
+      customer_name: o.customer?.name || o.customer_name || 'Customer',
+      customer_email: o.payer_email || o.customer_email || '—',
+      amount_cents: o.amount_cents || 0,
+      fee_cents: o.fee_cents || Math.round((o.amount_cents || 0) * 0.029 + 30),
+      currency: o.currency || 'USD',
+      payment_method: o.payment_method || 'PayPal Wallet',
+      status: o.status || 'COMPLETED',
+      captured_at: o.captured_at || o.created_at || new Date().toISOString(),
+    }));
+    exportPaymentsToCSV(formattedPayments);
+    toast.success('Export Successful', `Exported ${formattedPayments.length} payment capture records to CSV.`);
+  };
+
   return (
     <PageContainer>
       <PageHeader
         title="Payments"
         description="Monitor multi-currency capture streams, gateway settlements, and reserve provisions."
         actions={
-          <Button
-            variant="secondary"
-            icon={Download}
-            onClick={() => toast.success('Export Ready', 'Exported payment capture ledger in CSV format.')}
-          >
-            Export Ledger
-          </Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Button
+              variant="secondary"
+              icon={FileScan}
+              onClick={() => setIsScannerOpen(true)}
+            >
+              Scan Bill / Receipt
+            </Button>
+            <Button
+              variant="secondary"
+              icon={Download}
+              onClick={handleExport}
+            >
+              Export Ledger
+            </Button>
+          </div>
         }
       />
 
@@ -283,6 +341,11 @@ export function PaymentsPage() {
           onPageChange={(p) => setCurrentPage(p)}
         />
       </Card>
+
+      <DocumentScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+      />
     </PageContainer>
   );
 }
