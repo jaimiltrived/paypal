@@ -50,10 +50,16 @@ export const aiService = {
       const messages = Array.isArray(message)
         ? message
         : [{ role: 'user', content: String(message) }];
-      const res = await apiClient.post('/ai/chat', {
-        messages,
-        temperature: 0.2,
-      });
+      const res = await apiClient.post(
+        '/ai/chat',
+        {
+          messages,
+          temperature: 0.2,
+        },
+        {
+          timeout: 120000,
+        }
+      );
       const chatData = res.data?.data || res.data;
       return {
         data: {
@@ -106,10 +112,16 @@ export const aiService = {
    */
   async extractDocument({ image_base64, document_text }) {
     try {
-      const res = await apiClient.post('/ai/extract/document', {
-        image_base64,
-        document_text,
-      });
+      const res = await apiClient.post(
+        '/ai/extract/document',
+        {
+          image_base64,
+          document_text,
+        },
+        {
+          timeout: 180000, // 3 minutes timeout for Vision AI
+        }
+      );
       return {
         data: res.data?.data || res.data,
         isLive: true,
@@ -119,10 +131,15 @@ export const aiService = {
 
       // If an image was submitted, it strictly requires Ollama Qwen2.5-VL
       if (image_base64) {
+        if (err.code === 'ECONNABORTED' || (err.message && err.message.includes('timeout'))) {
+          throw new Error(
+            'Vision AI inference timed out. The local neural network (Qwen2.5-VL) is still loading into GPU memory. Please click "Scan with Multimodal AI" again.'
+          );
+        }
         const errorDetail = err.response?.data?.detail || err.message;
         throw new Error(
-          `Local Vision AI (Ollama) is not running on port 11434.\n` +
-          `To scan images with the neural network, please start Ollama with "qwen2.5-vl:3b".\n` +
+          `Local Vision AI (Ollama) error on port 11434.\n` +
+          `Please ensure Ollama is running with "qwen2.5-vl:3b" or "qwen2.5vl:3b".\n` +
           `(Error: ${errorDetail})`
         );
       }
@@ -148,10 +165,16 @@ export const aiService = {
    * Extract document and directly persist as a draft invoice
    */
   async extractToInvoice({ image_base64, document_text }) {
-    const res = await apiClient.post('/ai/extract/to-invoice', {
-      image_base64,
-      document_text,
-    });
+    const res = await apiClient.post(
+      '/ai/extract/to-invoice',
+      {
+        image_base64,
+        document_text,
+      },
+      {
+        timeout: 180000,
+      }
+    );
     return res.data;
   },
 };
