@@ -107,6 +107,24 @@ export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
     reader.readAsDataURL(file);
   };
 
+  const loadSampleImage = async (url, label) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result);
+        setImageBase64(reader.result);
+        setExtractedData(null);
+        toast.info('Sample Loaded', `${label} loaded into scanner.`);
+      };
+      reader.readAsDataURL(blob);
+    } catch (err) {
+      console.error('Failed to load sample image', err);
+      toast.warning('Error', 'Could not load sample receipt image.');
+    }
+  };
+
   const handleScan = async () => {
     if (activeTab === 'image' && !imageBase64) {
       toast.warning('Upload Required', 'Please select or drag a receipt image to scan.');
@@ -392,6 +410,69 @@ export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
                     </Button>
                   </div>
                 )}
+
+                <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
+                    Load Sample Receipt:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => loadSampleImage('/sample_receipts/receipt_tech_store.png', 'Tech Store Receipt')}
+                    style={{
+                      fontSize: '11px',
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--color-border)',
+                      background: 'var(--color-surface)',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                      color: 'var(--color-text-primary)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    🖥️ Tech Store ($281.02)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => loadSampleImage('/sample_receipts/receipt_bistro_cafe.png', 'Cafe Bistro Receipt')}
+                    style={{
+                      fontSize: '11px',
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--color-border)',
+                      background: 'var(--color-surface)',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                      color: 'var(--color-text-primary)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    ☕ Cafe Bistro ($37.43)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => loadSampleImage('/sample_receipts/receipt_cloud_services.png', 'Cloud SaaS Invoice')}
+                    style={{
+                      fontSize: '11px',
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--color-border)',
+                      background: 'var(--color-surface)',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                      color: 'var(--color-text-primary)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    ☁️ Cloud SaaS ($227.85)
+                  </button>
+                </div>
               </div>
             ) : (
               <div>
