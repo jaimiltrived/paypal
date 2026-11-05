@@ -293,8 +293,21 @@ export function PayPalCheckoutModal({ isOpen, onClose, onSuccess }) {
                       fontSize: 'var(--font-size-sm)',
                     }}
                   >
-                    Open PayPal Sandbox Checkout Window <ExternalLink size={14} />
+                    Open PayPal Hosted Checkout Window <ExternalLink size={14} />
                   </a>
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      color: 'var(--color-text-muted)',
+                      backgroundColor: 'var(--color-surface-subtle)',
+                      padding: '8px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--color-border)',
+                      lineHeight: '1.4',
+                    }}
+                  >
+                    <strong>Note:</strong> PayPal's website requires a live Developer Client ID & Secret in <code>.env</code>. If credentials are empty, PayPal's site displays <em>"Things don't appear to be working at the moment"</em>. You can capture and settle directly below!
+                  </div>
                 </div>
               )}
 
@@ -379,3 +392,4 @@ export function PayPalCheckoutModal({ isOpen, onClose, onSuccess }) {
     </div>
   );
 }
+
