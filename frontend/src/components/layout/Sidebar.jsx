@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { FIXTURE_USER } from '../../data/fixtures';
 import { useAuth } from '../../context/AuthContext';
+import { getRoleConfig } from '../../utils/rbac';
 
 const NAV_GROUPS = [
   {
@@ -60,7 +61,15 @@ export function Sidebar({
     .join('')
     .substring(0, 2)
     .toUpperCase();
-  const roleName = currentUser.role?.name || currentUser.role || 'Admin';
+  const roleKey = (currentUser.role?.name || currentUser.role || 'admin').toLowerCase();
+  const roleConfig = getRoleConfig(roleKey);
+  const roleName = roleConfig.name;
+
+  // Role-Based Navigation Filtering
+  const filteredNavGroups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => roleConfig.allowedRoutes.includes(item.path)),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <>
@@ -349,15 +358,19 @@ export function Sidebar({
                   <span
                     style={{
                       fontSize: '9.5px',
-                      fontWeight: 650,
-                      color: 'var(--color-primary)',
-                      backgroundColor: 'var(--color-primary-100)',
-                      padding: '0 4px',
-                      borderRadius: '3px',
+                      fontWeight: 700,
+                      color: roleConfig.color,
+                      backgroundColor: `${roleConfig.color}18`,
+                      padding: '1px 5px',
+                      borderRadius: '4px',
                       textTransform: 'uppercase',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px',
                     }}
                   >
-                    {roleName}
+                    <span>{roleConfig.icon}</span>
+                    <span>{roleConfig.slug}</span>
                   </span>
                 </div>
                 <span

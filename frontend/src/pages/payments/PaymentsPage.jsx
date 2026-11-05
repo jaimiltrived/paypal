@@ -17,11 +17,17 @@ import { FIXTURE_ORDERS, FIXTURE_KPI_METRICS } from '../../data/fixtures';
 import { formatCurrency, formatDate, truncateId } from '../../utils/formatters';
 import { exportPaymentsToCSV } from '../../utils/exportUtils';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { hasPermission, getRoleConfig } from '../../utils/rbac';
 
 export function PaymentsPage() {
   const navigate = useNavigate();
   const toast = useToast();
 
+  const { user } = useAuth();
+  const roleKey = (user?.role?.name || user?.role || 'admin').toLowerCase();
+  const roleConfig = getRoleConfig(roleKey);
+  const canCreate = hasPermission(roleKey, 'canCreatePayment');
   const [orders, setOrders] = useState(FIXTURE_ORDERS);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -201,14 +207,34 @@ export function PaymentsPage() {
         description="Monitor multi-currency capture streams, gateway settlements, and reserve provisions."
         actions={
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Button
-              variant="primary"
-              icon={Plus}
-              onClick={() => setIsCheckoutOpen(true)}
-              style={{ backgroundColor: '#003087', borderColor: '#003087', color: '#fff' }}
-            >
-              + New PayPal Payment
-            </Button>
+            {canCreate ? (
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={() => setIsCheckoutOpen(true)}
+                style={{ backgroundColor: '#003087', borderColor: '#003087', color: '#fff' }}
+              >
+                + New PayPal Payment
+              </Button>
+            ) : (
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#92400E',
+                  backgroundColor: '#FEF3C7',
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-pill)',
+                  border: '1px solid #FCD34D',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span>🔒</span>
+                <span>Auditor Mode (Read-Only)</span>
+              </div>
+            )}
             <Button
               variant="secondary"
               icon={FileScan}

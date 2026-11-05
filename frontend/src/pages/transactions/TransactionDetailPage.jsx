@@ -30,6 +30,8 @@ import { ordersService } from '../../services/ordersService';
 import { formatCurrency, formatDate, truncateId } from '../../utils/formatters';
 import { exportTransactionsToCSV } from '../../utils/exportUtils';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { hasPermission } from '../../utils/rbac';
 
 export function TransactionDetailPage() {
   const { transactionId } = useParams();
@@ -41,6 +43,9 @@ export function TransactionDetailPage() {
   const [copiedField, setCopiedField] = useState(null);
 
   // Refund modal state
+  const { user } = useAuth();
+  const roleKey = (user?.role?.name || user?.role || 'admin').toLowerCase();
+  const canRefund = hasPermission(roleKey, 'canIssueRefund');
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [refundReason, setRefundReason] = useState('Customer requested order cancellation');
   const [refundSubmitting, setRefundSubmitting] = useState(false);
@@ -409,10 +414,11 @@ export function TransactionDetailPage() {
                 size="md"
                 icon={RotateCcw}
                 onClick={() => setIsRefundModalOpen(true)}
-                disabled={order.status !== 'COMPLETED'}
-                style={{ width: '100%', justifyContent: 'flex-start' }}
+                disabled={order.status !== 'COMPLETED' || !canRefund}
+                title={!canRefund ? 'Refund issuance is restricted to Administrator and Operator roles.' : ''}
+                style={{ width: '100%', justifyContent: 'flex-start', opacity: !canRefund ? 0.6 : 1 }}
               >
-                Initiate Refund...
+                {canRefund ? 'Initiate Refund...' : 'Initiate Refund (Admin/Op Only)'}
               </Button>
 
               <Button

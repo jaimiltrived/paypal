@@ -34,6 +34,8 @@ import { payoutsService } from '../../services/payoutsService';
 import { formatCurrency, formatDate, truncateId } from '../../utils/formatters';
 import { exportPayoutsToCSV } from '../../utils/exportUtils';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { hasPermission } from '../../utils/rbac';
 
 export function PayoutsPage() {
   const navigate = useNavigate();
@@ -53,6 +55,9 @@ export function PayoutsPage() {
   const pageSize = 5;
 
   // New Payout Modal State
+  const { user } = useAuth();
+  const roleKey = (user?.role?.name || user?.role || 'admin').toLowerCase();
+  const canDisburse = hasPermission(roleKey, 'canDisbursePayout');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -277,13 +282,29 @@ export function PayoutsPage() {
             >
               Refresh
             </Button>
-            <Button
-              variant="primary"
-              icon={Plus}
-              onClick={() => setIsModalOpen(true)}
-            >
-              Disburse Funds
-            </Button>
+            {canDisburse ? (
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={() => setIsModalOpen(true)}
+              >
+                Disburse Funds
+              </Button>
+            ) : (
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#92400E',
+                  backgroundColor: '#FEF3C7',
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-pill)',
+                  border: '1px solid #FCD34D',
+                }}
+              >
+                🔒 Read-Only Auditor Mode
+              </div>
+            )}
           </div>
         }
       />

@@ -134,3 +134,4 @@ export function matchSampleReceipt(keyOrUrl) {
   }
   return null;
 }
+

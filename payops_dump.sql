@@ -84,6 +84,9 @@ INSERT INTO "audit_logs" VALUES('b5bc9c5d-bf9f-4f92-b8cd-05bab6e76e0a','88b63afc
 INSERT INTO "audit_logs" VALUES('5b1e361c-782a-40a3-a9bc-5e84450f7478','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,'testclient','2026-11-05 07:27:14.264789');
 INSERT INTO "audit_logs" VALUES('9e02500d-b277-4c2c-95a7-1caf97ed577f','88b63afc-0a84-4768-8d44-8528095cc71b','ORDER_CREATED','order','0b84bd4d-1ec9-48cf-bf7c-d8f2aedc55be',NULL,'{"paypal_order_id": "51X30506UG084594C", "amount_cents": 3500, "currency": "USD", "status": "CREATED"}','testclient','2026-11-05 07:27:16.368373');
 INSERT INTO "audit_logs" VALUES('012ede55-9c90-43e6-afd4-02ef4d70be98','88b63afc-0a84-4768-8d44-8528095cc71b','ORDER_CAPTURED','order','0b84bd4d-1ec9-48cf-bf7c-d8f2aedc55be','{"status": "CREATED"}','{"status": "COMPLETED", "capture_id": "2C912BC142FAAE4A5", "payer_email": "sandbox-buyer@payops.ai"}','testclient','2026-11-05 07:27:17.841887');
+INSERT INTO "audit_logs" VALUES('7804d342-c123-469c-943c-e4052e03446e','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,'127.0.0.1','2026-11-05 07:44:11.087250');
+INSERT INTO "audit_logs" VALUES('6c902f52-8fc2-4b78-81e1-1927caa2057a','88b63afc-0a84-4768-8d44-8528095cc71b','REFUND_ISSUED','refund','0c888afc-2a63-40ff-8de8-3f7cb123dbee',NULL,'{"order_id": "0b84bd4d-1ec9-48cf-bf7c-d8f2aedc55be", "amount_cents": 3500, "paypal_refund_id": "9R2CAF88FE02F44CE", "status": "COMPLETED"}','127.0.0.1','2026-11-05 07:46:14.875997');
+INSERT INTO "audit_logs" VALUES('2aa0329a-a724-4537-a206-b3f11e44cbed','0759ab26-e139-4561-8e7a-560d317b5c23','USER_REGISTERED','user','0759ab26-e139-4561-8e7a-560d317b5c23',NULL,'{"email": "customer@example.com", "role": "user"}',NULL,'2026-11-05 08:19:23.008040');
 CREATE TABLE disputes (
 	id VARCHAR(36) NOT NULL, 
 	paypal_dispute_id VARCHAR(100), 
@@ -162,7 +165,7 @@ INSERT INTO "orders" VALUES('48222ae4-e983-4420-a58e-7f2d6e7f6a88','88b63afc-0a8
 INSERT INTO "orders" VALUES('0192aa1c-8295-4c4b-9c4a-0079478a7767','88b63afc-0a84-4768-8d44-8528095cc71b','28P3219052816501T','CREATED','USD',49900,'PayOps Enterprise Annual License',NULL,NULL,NULL,'2026-11-05 07:19:32.251297','2026-11-05 07:19:33.880089');
 INSERT INTO "orders" VALUES('f83af40c-d5b2-4556-b6ed-49f715ef5522','88b63afc-0a84-4768-8d44-8528095cc71b','36J14697R71948240','COMPLETED','USD',4900,'Full Stack Payment Test',NULL,'sandbox-buyer@payops.ai','2C9EA2CF2EDF3B49B','2026-11-05 07:24:27.204809','2026-11-05 07:24:30.827541');
 INSERT INTO "orders" VALUES('1502eaf5-3c98-42bd-a264-3251b10fcb4f','88b63afc-0a84-4768-8d44-8528095cc71b','45V08013F6969642S','COMPLETED','USD',4900,'PayOps Pro Monthly Subscription',NULL,'sandbox-buyer@payops.ai','2C649CC9EE8C26445','2026-11-05 07:25:08.080306','2026-11-05 07:25:25.682851');
-INSERT INTO "orders" VALUES('0b84bd4d-1ec9-48cf-bf7c-d8f2aedc55be','88b63afc-0a84-4768-8d44-8528095cc71b','51X30506UG084594C','COMPLETED','USD',3500,'Full Refund Test',NULL,'sandbox-buyer@payops.ai','2C912BC142FAAE4A5','2026-11-05 07:27:14.302813','2026-11-05 07:27:17.827024');
+INSERT INTO "orders" VALUES('0b84bd4d-1ec9-48cf-bf7c-d8f2aedc55be','88b63afc-0a84-4768-8d44-8528095cc71b','51X30506UG084594C','REFUNDED','USD',3500,'Full Refund Test',NULL,'sandbox-buyer@payops.ai','2C912BC142FAAE4A5','2026-11-05 07:27:14.302813','2026-11-05 07:46:14.854775');
 CREATE TABLE payouts (
 	id VARCHAR(36) NOT NULL, 
 	user_id VARCHAR(36), 
@@ -221,6 +224,7 @@ CREATE TABLE refunds (
 	FOREIGN KEY(initiated_by_user_id) REFERENCES users (id)
 );
 INSERT INTO "refunds" VALUES('ref_99182-3819-44cb-a912','ord_77182-1204-43cb-9801-11b023f76101','REF-992019283',125000,'USD','PENDING','Customer cancelled enterprise annual plan within 7-day trial.','db862531-b7e1-4525-a516-2fb4955b303c','2026-11-04 08:36:36.499999','2026-11-04 08:36:36.499999');
+INSERT INTO "refunds" VALUES('0c888afc-2a63-40ff-8de8-3f7cb123dbee','0b84bd4d-1ec9-48cf-bf7c-d8f2aedc55be','9R2CAF88FE02F44CE',3500,'USD','COMPLETED','Customer requested order cancellation','88b63afc-0a84-4768-8d44-8528095cc71b','2026-11-05 07:46:14.797147','2026-11-05 07:46:14.797147');
 CREATE TABLE roles (
 	id VARCHAR(36) NOT NULL, 
 	name VARCHAR(50) NOT NULL, 
@@ -264,6 +268,7 @@ CREATE TABLE users (
 INSERT INTO "users" VALUES('88b63afc-0a84-4768-8d44-8528095cc71b','admin@payops.ai','$2b$12$VrDWOng9.LD4XsT9vXi/..YmfkMfm50fBTgfGmPpTddB.C5WCyvjG','Alex Vance (Admin)',1,'d772c918-063a-47df-86dc-1d6fc8d0a4c4','2026-11-03 07:59:19.518993','2026-11-05 06:31:55.613711');
 INSERT INTO "users" VALUES('db862531-b7e1-4525-a516-2fb4955b303c','operator@payops.ai','$2b$12$mD8rFgG.CXniqDiMkSkvKuwMb/LbHk4/4smEw6yGVosgNW89htiA6','Sarah Jenkins (Operator)',1,'d8074c1a-890e-460d-b42f-a259bde4dd22','2026-11-04 08:33:34.053070','2026-11-04 09:36:56.136832');
 INSERT INTO "users" VALUES('b3614405-a384-4f1c-b3d6-59df744d2443','auditor@payops.ai','$2b$12$mqd151xQUksQmz8meOcRB.BpjVSPai/99QJf06sLJzFTl4yjzvC7a','Marcus Brody (Auditor)',1,'4556722f-8599-4255-a1d9-8b5169787e25','2026-11-04 08:33:34.269103','2026-11-04 09:36:56.136832');
+INSERT INTO "users" VALUES('0759ab26-e139-4561-8e7a-560d317b5c23','customer@example.com','$2b$12$Sa5jurhlJF01OfswNWfkIusLywWicuAhPTbivckISInVJVkgKl39e','Elena Rostova (Customer)',1,'583f184b-4a18-4b0e-a432-82e263b3fc54','2026-11-05 08:19:22.989862','2026-11-05 08:19:22.989862');
 CREATE INDEX ix_roles_created_at ON roles (created_at);
 CREATE UNIQUE INDEX ix_roles_name ON roles (name);
 CREATE UNIQUE INDEX ix_events_event_id ON events (event_id);

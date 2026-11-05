@@ -17,6 +17,7 @@ import { Badge } from '../ui/Badge';
 import { FIXTURE_USER } from '../../data/fixtures';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { RoleSwitcher } from './RoleSwitcher';
 
 export function Topbar({ onOpenMobile }) {
   const navigate = useNavigate();
@@ -214,6 +215,9 @@ export function Topbar({ onOpenMobile }) {
             />
           )}
         </div>
+
+        {/* Workstation Role Switcher */}
+        <RoleSwitcher />
 
         {/* User Menu Trigger */}
         <Dropdown
