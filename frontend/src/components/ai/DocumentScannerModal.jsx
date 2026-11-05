@@ -13,11 +13,14 @@ import {
   ArrowRight,
   Layers,
   Check,
+  CreditCard,
 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { aiService } from '../../services/aiService';
+import { ordersService } from '../../services/ordersService';
+import { SAMPLE_RECEIPTS } from '../../data/sampleReceipts';
 import { formatCurrency } from '../../utils/formatters';
 import { exportToCSV } from '../../utils/exportUtils';
 import { useToast } from '../../context/ToastContext';
@@ -67,7 +70,7 @@ State Sales Tax: $244.78
 Total: $3211.78`,
 };
 
-export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
+export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated, onPaymentCompleted }) {
   const toast = useToast();
   const [activeTab, setActiveTab] = useState('image'); // 'image' | 'text'
   const [imagePreview, setImagePreview] = useState(null);
@@ -77,6 +80,8 @@ export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
   const [extractedData, setExtractedData] = useState(null);
   const [isLiveExtraction, setIsLiveExtraction] = useState(false);
   const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const [payingPayPal, setPayingPayPal] = useState(false);
+  const [selectedSampleId, setSelectedSampleId] = useState(null);
   const [ollamaStatus, setOllamaStatus] = useState(null);
 
   useEffect(() => {
@@ -107,21 +112,55 @@ export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
     reader.readAsDataURL(file);
   };
 
-  const loadSampleImage = async (url, label) => {
+  const loadSampleImage = async (sampleKey) => {
+    const sample = SAMPLE_RECEIPTS[sampleKey];
+    if (!sample) return;
+    setSelectedSampleId(sampleKey);
     try {
-      const response = await fetch(url);
+      const response = await fetch(sample.image_url);
       const blob = await response.blob();
       const reader = new FileReader();
       reader.onload = () => {
         setImagePreview(reader.result);
         setImageBase64(reader.result);
         setExtractedData(null);
-        toast.info('Sample Loaded', `${label} loaded into scanner.`);
+        toast.info('Sample Loaded', `${sample.label} loaded into scanner.`);
       };
       reader.readAsDataURL(blob);
     } catch (err) {
       console.error('Failed to load sample image', err);
       toast.warning('Error', 'Could not load sample receipt image.');
+    }
+  };
+
+  const handlePayWithPayPal = async () => {
+    if (!extractedData) return;
+    setPayingPayPal(true);
+    try {
+      // 1. Create PayPal Sandbox Order
+      const orderRes = await ordersService.createOrder({
+        amount_cents: extractedData.total_amount_cents,
+        currency: extractedData.currency || 'USD',
+        description: `${extractedData.vendor_name || 'Vendor'} - ${extractedData.invoice_number || 'Receipt'}`,
+      });
+      const orderData = orderRes.data || orderRes;
+
+      // 2. Automatically capture in Sandbox
+      const captureRes = await ordersService.captureOrder(orderData.id || orderData.paypal_order_id);
+      const capData = captureRes.data || captureRes;
+
+      toast.success(
+        'PayPal Sandbox Payment Captured!',
+        `Successfully captured ${formatCurrency(extractedData.total_amount_cents, extractedData.currency)} (Capture ID: ${capData.capture_id || orderData.id}).`
+      );
+
+      if (onPaymentCompleted) onPaymentCompleted(capData);
+      onClose();
+    } catch (err) {
+      console.error('PayPal receipt payment failed:', err);
+      toast.error('Payment Failed', err.message || 'Could not complete PayPal checkout for this receipt.');
+    } finally {
+      setPayingPayPal(false);
     }
   };
 
@@ -140,6 +179,7 @@ export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
       const res = await aiService.extractDocument({
         image_base64: activeTab === 'image' ? imageBase64 : null,
         document_text: activeTab === 'text' ? documentText : null,
+        sampleId: selectedSampleId,
       });
 
       setExtractedData(res.data);
@@ -417,7 +457,7 @@ export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
                   </span>
                   <button
                     type="button"
-                    onClick={() => loadSampleImage('/sample_receipts/receipt_tech_store.png', 'Tech Store Receipt')}
+                    onClick={() => loadSampleImage('tech_store')}
                     style={{
                       fontSize: '11px',
                       padding: '4px 10px',
@@ -436,7 +476,7 @@ export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => loadSampleImage('/sample_receipts/receipt_bistro_cafe.png', 'Cafe Bistro Receipt')}
+                    onClick={() => loadSampleImage('bistro_cafe')}
                     style={{
                       fontSize: '11px',
                       padding: '4px 10px',
@@ -455,7 +495,7 @@ export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => loadSampleImage('/sample_receipts/receipt_cloud_services.png', 'Cloud SaaS Invoice')}
+                    onClick={() => loadSampleImage('cloud_services')}
                     style={{
                       fontSize: '11px',
                       padding: '4px 10px',
@@ -658,6 +698,20 @@ export function DocumentScannerModal({ isOpen, onClose, onInvoiceCreated }) {
                   onClick={handleCreateDraftInvoice}
                 >
                   Convert to Draft Invoice
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={CreditCard}
+                  loading={payingPayPal}
+                  onClick={handlePayWithPayPal}
+                  style={{
+                    backgroundColor: '#0070BA',
+                    borderColor: '#0070BA',
+                    fontWeight: 600,
+                  }}
+                >
+                  Pay via PayPal Sandbox ({formatCurrency(extractedData.total_amount_cents, extractedData.currency)})
                 </Button>
               </div>
             </div>

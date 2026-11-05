@@ -369,6 +369,8 @@ export function PaymentsPage() {
       <DocumentScannerModal
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
+        onInvoiceCreated={() => reloadOrders()}
+        onPaymentCompleted={() => reloadOrders()}
       />
 
       <PayPalCheckoutModal
