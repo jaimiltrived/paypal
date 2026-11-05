@@ -57,6 +57,16 @@ INSERT INTO "audit_logs" VALUES('a9262a15-2e3f-4a92-a2c9-90468df9afe0','88b63afc
 INSERT INTO "audit_logs" VALUES('095f3177-ffe9-436c-b73c-cd4890de2616','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,NULL,'2026-11-05 06:28:14.385786');
 INSERT INTO "audit_logs" VALUES('9b55a0e7-80b8-413e-9c27-b7920c18767f','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,'127.0.0.1','2026-11-05 06:28:52.368886');
 INSERT INTO "audit_logs" VALUES('1580fd72-0c81-4a12-b0d1-d3679a8fb488','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,'127.0.0.1','2026-11-05 06:28:52.999509');
+INSERT INTO "audit_logs" VALUES('d7688ea7-e4f6-453c-b832-2e58ad0db4d6','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,'127.0.0.1','2026-11-05 06:31:55.631717');
+INSERT INTO "audit_logs" VALUES('97aefec2-ab07-46c9-938a-cdc2e2d76690','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,'127.0.0.1','2026-11-05 06:31:55.991663');
+INSERT INTO "audit_logs" VALUES('82e4d01f-4b2d-48d2-ace1-77869210de4d','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,'127.0.0.1','2026-11-05 06:32:14.079280');
+INSERT INTO "audit_logs" VALUES('ef1cd1c2-44fe-4717-8661-7c12cf300d42','db862531-b7e1-4525-a516-2fb4955b303c','LOGIN_SUCCESS','user','db862531-b7e1-4525-a516-2fb4955b303c',NULL,NULL,'127.0.0.1','2026-11-05 06:32:14.417166');
+INSERT INTO "audit_logs" VALUES('94e81a02-95e8-4a29-b330-e268eb8de6a0','b3614405-a384-4f1c-b3d6-59df744d2443','LOGIN_SUCCESS','user','b3614405-a384-4f1c-b3d6-59df744d2443',NULL,NULL,'127.0.0.1','2026-11-05 06:32:14.752576');
+INSERT INTO "audit_logs" VALUES('63a35484-2ddf-41ed-b4a6-14ab90025fd1','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,'127.0.0.1','2026-11-05 06:32:37.091089');
+INSERT INTO "audit_logs" VALUES('d90105ad-d05d-4fbe-b34c-4d6c0a99c1c9','88b63afc-0a84-4768-8d44-8528095cc71b','INVOICE_CREATED','invoice','c313fdb0-0e06-4d97-8b94-c06f0e425481',NULL,'{"invoice_number": "INV-2026-00001", "total_amount_cents": 21525, "status": "DRAFT"}','127.0.0.1','2026-11-05 06:33:47.424107');
+INSERT INTO "audit_logs" VALUES('a6b5eeed-48a0-4212-8f14-e0a363a720ca','88b63afc-0a84-4768-8d44-8528095cc71b','LOGIN_SUCCESS','user','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,NULL,'testclient','2026-11-05 06:40:33.859889');
+INSERT INTO "audit_logs" VALUES('0ce5aa53-74aa-4d8f-8cdc-efc89e905405','88b63afc-0a84-4768-8d44-8528095cc71b','ORDER_CREATED','order','8d75de3f-975e-4752-a445-5a1c86ba3525',NULL,'{"paypal_order_id": "5OD47C1F095949457", "amount_cents": 4900, "currency": "USD", "status": "CREATED"}','testclient','2026-11-05 06:40:33.921033');
+INSERT INTO "audit_logs" VALUES('63c30ecb-5158-4f7b-94ae-39a866c29e46','88b63afc-0a84-4768-8d44-8528095cc71b','ORDER_CAPTURED','order','8d75de3f-975e-4752-a445-5a1c86ba3525','{"status": "CREATED"}','{"status": "COMPLETED", "capture_id": "2C0B71F84C113C4FF", "payer_email": "sandbox-buyer@payops.ai"}','testclient','2026-11-05 06:40:33.956814');
 CREATE TABLE disputes (
 	id VARCHAR(36) NOT NULL, 
 	paypal_dispute_id VARCHAR(100), 
@@ -104,6 +114,7 @@ CREATE TABLE invoices (
 	FOREIGN KEY(user_id) REFERENCES users (id), 
 	FOREIGN KEY(order_id) REFERENCES orders (id)
 );
+INSERT INTO "invoices" VALUES('c313fdb0-0e06-4d97-8b94-c06f0e425481','INV-2026-00001','88b63afc-0a84-4768-8d44-8528095cc71b',NULL,'DRAFT','USD',21525,NULL,NULL,'{"items": [{"sku_id": null, "name": "Amazon EC2 Compute Linux (t4g.xlarge, 720 hrs)", "quantity": 1, "unit_price_cents": 1540, "line_total_cents": 1540}, {"sku_id": null, "name": "Amazon Relational Database Service (Multi-AZ Postgres)", "quantity": 1, "unit_price_cents": 14250, "line_total_cents": 14250}, {"sku_id": null, "name": "Amazon S3 Standard Storage (1.2 TB)", "quantity": 1, "unit_price_cents": 2760, "line_total_cents": 2760}, {"sku_id": null, "name": "CloudFront Global Data Transfer Out (350 GB)", "quantity": 1, "unit_price_cents": 2975, "line_total_cents": 2975}], "notes": "AI Extracted from Amazon Web Services Inc.. Invoice Ref: AWS-2026-98124"}','2026-11-05 06:33:47.405595','2026-11-05 06:33:47.405595');
 CREATE TABLE orders (
 	id VARCHAR(36) NOT NULL, 
 	user_id VARCHAR(36), 
@@ -126,6 +137,7 @@ INSERT INTO "orders" VALUES('ord_66192-8921-41bb-a202-33c948d88219','88b63afc-0a
 INSERT INTO "orders" VALUES('ord_55291-0912-42aa-b881-22c091a99021','db862531-b7e1-4525-a516-2fb4955b303c','2KL88192EU771920A','COMPLETED','EUR',24190,'European Dedicated Ingress Node','CUST-ORG-5512','billing@strato-cloud.de','CAP-992019482','2026-11-04 08:36:36.495285','2026-11-04 08:36:36.495285');
 INSERT INTO "orders" VALUES('ord_44102-8812-45ff-a102-77d012e88124','88b63afc-0a84-4768-8d44-8528095cc71b','5IN99102IN449102B','COMPLETED','INR',1240500,'Subcontinent Cloud Gateway Connect','CUST-ORG-4410','payments@indicpay.in','CAP-112094819','2026-11-04 08:36:36.495285','2026-11-04 08:36:36.495285');
 INSERT INTO "orders" VALUES('ord_33190-7721-41ee-99aa-88f012b77190','db862531-b7e1-4525-a516-2fb4955b303c','7US44192US991820Z','PENDING','USD',54000,'GPU Cluster Ops Reserve Hold','CUST-ORG-3310','procurement@lumina-ai.com',NULL,'2026-11-04 08:36:36.495285','2026-11-04 08:36:36.495285');
+INSERT INTO "orders" VALUES('8d75de3f-975e-4752-a445-5a1c86ba3525','88b63afc-0a84-4768-8d44-8528095cc71b','5OD47C1F095949457','COMPLETED','USD',4900,'PayOps Pro Subscription',NULL,'sandbox-buyer@payops.ai','2C0B71F84C113C4FF','2026-11-05 06:40:33.896601','2026-11-05 06:40:33.946491');
 CREATE TABLE payouts (
 	id VARCHAR(36) NOT NULL, 
 	user_id VARCHAR(36), 
@@ -224,7 +236,7 @@ CREATE TABLE users (
 	PRIMARY KEY (id), 
 	FOREIGN KEY(role_id) REFERENCES roles (id)
 );
-INSERT INTO "users" VALUES('88b63afc-0a84-4768-8d44-8528095cc71b','admin@payops.ai','$2b$12$B6r6FKiYHVxnJLHAG4EF2e.2dIBM4NNWht9HK4LW65XrDWqi0imPm','Alex Vance (Admin)',1,'d772c918-063a-47df-86dc-1d6fc8d0a4c4','2026-11-03 07:59:19.518993','2026-11-05 06:28:52.989991');
+INSERT INTO "users" VALUES('88b63afc-0a84-4768-8d44-8528095cc71b','admin@payops.ai','$2b$12$VrDWOng9.LD4XsT9vXi/..YmfkMfm50fBTgfGmPpTddB.C5WCyvjG','Alex Vance (Admin)',1,'d772c918-063a-47df-86dc-1d6fc8d0a4c4','2026-11-03 07:59:19.518993','2026-11-05 06:31:55.613711');
 INSERT INTO "users" VALUES('db862531-b7e1-4525-a516-2fb4955b303c','operator@payops.ai','$2b$12$mD8rFgG.CXniqDiMkSkvKuwMb/LbHk4/4smEw6yGVosgNW89htiA6','Sarah Jenkins (Operator)',1,'d8074c1a-890e-460d-b42f-a259bde4dd22','2026-11-04 08:33:34.053070','2026-11-04 09:36:56.136832');
 INSERT INTO "users" VALUES('b3614405-a384-4f1c-b3d6-59df744d2443','auditor@payops.ai','$2b$12$mqd151xQUksQmz8meOcRB.BpjVSPai/99QJf06sLJzFTl4yjzvC7a','Marcus Brody (Auditor)',1,'4556722f-8599-4255-a1d9-8b5169787e25','2026-11-04 08:33:34.269103','2026-11-04 09:36:56.136832');
 CREATE INDEX ix_roles_created_at ON roles (created_at);

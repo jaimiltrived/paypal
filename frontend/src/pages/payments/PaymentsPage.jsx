@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Download, Filter, RefreshCw, Search, ExternalLink, Receipt, CheckCircle2, DollarSign, Euro, IndianRupee, ShieldCheck, ArrowRight, FileScan } from 'lucide-react';
+import { CreditCard, Download, Filter, RefreshCw, Search, ExternalLink, Receipt, CheckCircle2, DollarSign, Euro, IndianRupee, ShieldCheck, ArrowRight, FileScan, Plus } from 'lucide-react';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Card } from '../../components/ui/Card';
@@ -11,6 +11,7 @@ import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Table } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
 import { DocumentScannerModal } from '../../components/ai/DocumentScannerModal';
+import { PayPalCheckoutModal } from '../../components/payments/PayPalCheckoutModal';
 import { ordersService } from '../../services/ordersService';
 import { FIXTURE_ORDERS, FIXTURE_KPI_METRICS } from '../../data/fixtures';
 import { formatCurrency, formatDate, truncateId } from '../../utils/formatters';
@@ -28,7 +29,22 @@ export function PaymentsPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const pageSize = 5;
+
+  const reloadOrders = async () => {
+    setLoading(true);
+    try {
+      const res = await ordersService.getOrders();
+      if (res?.data) {
+        setOrders(res.data);
+      }
+    } catch (e) {
+      console.warn('Failed to reload orders', e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -185,6 +201,14 @@ export function PaymentsPage() {
         description="Monitor multi-currency capture streams, gateway settlements, and reserve provisions."
         actions={
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Button
+              variant="primary"
+              icon={Plus}
+              onClick={() => setIsCheckoutOpen(true)}
+              style={{ backgroundColor: '#003087', borderColor: '#003087', color: '#fff' }}
+            >
+              + New PayPal Payment
+            </Button>
             <Button
               variant="secondary"
               icon={FileScan}
@@ -345,6 +369,12 @@ export function PaymentsPage() {
       <DocumentScannerModal
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
+      />
+
+      <PayPalCheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        onSuccess={() => reloadOrders()}
       />
     </PageContainer>
   );
