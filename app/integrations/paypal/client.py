@@ -270,6 +270,48 @@ class PayPalClient:
             logger.error(f"Error calling verify-webhook-signature: {exc}")
             return False
 
+    async def test_connection(self) -> dict[str, Any]:
+        """Test OAuth connectivity and health with PayPal Sandbox REST API."""
+        if not self.client_id or not self.client_secret:
+            return {
+                "status": "UNCONFIGURED",
+                "connected": False,
+                "mode": settings.PAYPAL_MODE,
+                "base_url": self.base_url,
+                "message": "PayPal Client ID or Secret not provided in .env",
+                "client_id_configured": bool(self.client_id),
+                "secret_configured": bool(self.client_secret),
+                "webhook_id_configured": bool(self.webhook_id),
+            }
+        try:
+            start = time.time()
+            await self._get_access_token()
+            latency_ms = round((time.time() - start) * 1000, 2)
+            return {
+                "status": "CONNECTED",
+                "connected": True,
+                "mode": settings.PAYPAL_MODE,
+                "base_url": self.base_url,
+                "latency_ms": latency_ms,
+                "message": "Successfully authenticated with PayPal Sandbox REST API v2.",
+                "client_id_configured": True,
+                "secret_configured": True,
+                "webhook_id_configured": bool(self.webhook_id),
+                "token_cached": bool(self._cached_token),
+                "token_expires_in_secs": max(0, int(self._token_expires_at - time.time())),
+            }
+        except Exception as exc:
+            return {
+                "status": "ERROR",
+                "connected": False,
+                "mode": settings.PAYPAL_MODE,
+                "base_url": self.base_url,
+                "message": str(exc),
+                "client_id_configured": True,
+                "secret_configured": True,
+                "webhook_id_configured": bool(self.webhook_id),
+            }
+
 
 _paypal_client_instance: Optional[PayPalClient] = None
 

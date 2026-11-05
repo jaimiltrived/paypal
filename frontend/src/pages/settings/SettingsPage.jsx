@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   User,
@@ -57,6 +57,25 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [pinging, setPinging] = useState(false);
   const [pingLatency, setPingLatency] = useState(42);
+  const [paypalTelemetry, setPaypalTelemetry] = useState({
+    status: 'ACTIVE',
+    mode: 'sandbox',
+    base_url: 'https://api-m.sandbox.paypal.com',
+    client_id_configured: false,
+    secret_configured: false,
+    webhook_id_configured: false,
+  });
+
+  useEffect(() => {
+    apiClient
+      .get('/paypal/status')
+      .then((res) => {
+        if (res.data?.data) {
+          setPaypalTelemetry(res.data.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSave = (sectionName) => {
     setSaving(true);
@@ -70,12 +89,12 @@ export function SettingsPage() {
     setPinging(true);
     const start = performance.now();
     try {
-      const res = await apiClient.get('/health');
+      const res = await apiClient.post('/paypal/test-connection');
       const latency = Math.round(performance.now() - start);
       setPingLatency(latency);
       toast.success(
-        'Backend & Gateway Health Verified',
-        `FastAPI Backend responded in ${latency}ms. Status: ${res.data?.status || 'HEALTHY'}`
+        'PayPal Sandbox Gateway Telemetry',
+        res.data?.data?.message || `Gateway responded in ${latency}ms.`
       );
     } catch {
       const simLatency = Math.floor(38 + Math.random() * 12);
@@ -428,7 +447,7 @@ export function SettingsPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <Input
                   label="PayPal Client ID"
-                  value="AWhZ81928_SANDBOX_CLIENT_ID_SECURED"
+                  value={paypalTelemetry.client_id_configured ? "Configured in .env (Active)" : "Pending configuration in .env"}
                   disabled
                   helperText="Client ID from PayPal Developer Dashboard."
                 />

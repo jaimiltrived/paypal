@@ -9,6 +9,7 @@ from app.api.v1.endpoints import (
     judge,
     ledger,
     orders,
+    paypal,
     payouts,
     pending_actions,
     refunds,
@@ -20,6 +21,7 @@ api_router = APIRouter()
 
 api_router.include_router(health.router, tags=["Health"])
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(paypal.router, prefix="/paypal", tags=["PayPal Gateway"])
 api_router.include_router(orders.router, prefix="/orders", tags=["Orders"])
 api_router.include_router(refunds.router, prefix="/refunds", tags=["Refunds"])
 api_router.include_router(payouts.router, prefix="/payouts", tags=["Payouts"])
