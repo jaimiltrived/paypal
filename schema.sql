@@ -87,6 +87,23 @@ CREATE TABLE orders (
 	FOREIGN KEY(user_id) REFERENCES users (id)
 );
 
+CREATE TABLE payouts (
+	id VARCHAR(36) NOT NULL, 
+	user_id VARCHAR(36), 
+	payout_batch_id VARCHAR(100), 
+	payout_item_id VARCHAR(100), 
+	recipient_email VARCHAR(255) NOT NULL, 
+	recipient_name VARCHAR(100), 
+	amount_cents INTEGER NOT NULL, 
+	currency VARCHAR(3) NOT NULL, 
+	status VARCHAR(30) NOT NULL, 
+	note VARCHAR(255), 
+	created_at DATETIME NOT NULL, 
+	updated_at DATETIME NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id)
+);
+
 CREATE TABLE pending_actions (
 	id VARCHAR(36) NOT NULL, 
 	action_type VARCHAR(50) NOT NULL, 
@@ -203,6 +220,18 @@ CREATE UNIQUE INDEX ix_orders_paypal_order_id ON orders (paypal_order_id);
 CREATE INDEX ix_orders_status ON orders (status);
 
 CREATE INDEX ix_orders_user_id ON orders (user_id);
+
+CREATE INDEX ix_payouts_created_at ON payouts (created_at);
+
+CREATE UNIQUE INDEX ix_payouts_payout_batch_id ON payouts (payout_batch_id);
+
+CREATE UNIQUE INDEX ix_payouts_payout_item_id ON payouts (payout_item_id);
+
+CREATE INDEX ix_payouts_recipient_email ON payouts (recipient_email);
+
+CREATE INDEX ix_payouts_status ON payouts (status);
+
+CREATE INDEX ix_payouts_user_id ON payouts (user_id);
 
 CREATE INDEX ix_pending_actions_action_type ON pending_actions (action_type);
 
